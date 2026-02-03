@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ScimitarBattery (Windows)": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "framework": "net8.0-windows10.0.19041.0"
+    }
+  }
+}

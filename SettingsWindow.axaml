@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ScimitarBattery.SettingsWindow"
+        Title="Scimitar Battery Monitor"
+        Width="520" Height="560" MinWidth="520" MinHeight="560"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen">
+  <StackPanel Margin="24" Spacing="16">
+    <TextBlock Text="Scimitar Battery Monitor" FontWeight="Bold" FontSize="18"/>
+    <TextBlock Text="Configure device, poll interval, and thresholds." Opacity="0.8" TextWrapping="Wrap"/>
+    <TextBlock x:Name="StatusText" Opacity="0.85" Foreground="OrangeRed" TextWrapping="Wrap"/>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="Device" FontWeight="Bold" Foreground="#8FD3FF"/>
+      <Grid ColumnDefinitions="*,Auto">
+        <ComboBox x:Name="DeviceCombo" HorizontalAlignment="Stretch" Margin="0,0,12,0">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Label}"/>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <Button x:Name="RefreshDevices" Content="Refresh" Grid.Column="1"/>
+      </Grid>
+    </StackPanel>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="Polling and thresholds" FontWeight="Bold" Foreground="#8FD3FF"/>
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <StackPanel Spacing="6" Width="150">
+          <TextBlock Text="Poll (sec)"/>
+          <NumericUpDown x:Name="PollInterval" Minimum="1" Maximum="3600" Value="30" Increment="5"/>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="Notifications" FontWeight="Bold" Foreground="#8FD3FF"/>
+      <StackPanel Spacing="8">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Route"/>
+          <ComboBox x:Name="NotificationRouteCombo" HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <CheckBox x:Name="NotifyLow" Content="Low" VerticalAlignment="Center"/>
+            <NumericUpDown x:Name="LowThreshold" Minimum="0" Maximum="100" Value="30" Width="90" MinWidth="90"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <CheckBox x:Name="NotifyCritical" Content="Critical" VerticalAlignment="Center"/>
+            <NumericUpDown x:Name="CriticalThreshold" Minimum="0" Maximum="100" Value="15" Width="90" MinWidth="90"/>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+
+      <TextBlock Text="Device LED" FontWeight="Bold" Foreground="#8FD3FF" Margin="0,8,0,0"/>
+      <CheckBox x:Name="EnableBatteryLed" Content="Use mouse LED to indicate battery"/>
+      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+        <StackPanel Spacing="6" Width="180">
+          <TextBlock Text="LED target"/>
+          <ComboBox x:Name="BatteryLedTargetCombo" HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        <StackPanel Spacing="6" Width="180">
+          <TextBlock Text="Control mode"/>
+          <ComboBox x:Name="LightingControlModeCombo" HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        <StackPanel Spacing="6" Width="110">
+          <TextBlock Text=""/>
+          <Button x:Name="TestLedButton" Content="Test LED (High)"/>
+        </StackPanel>
+      </StackPanel>
+
+      <TextBlock Text="Battery LED colors" FontWeight="Bold" Foreground="#8FD3FF" Margin="0,8,0,0"/>
+      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6" Margin="0,0,16,12">
+          <TextBlock Text="High"/>
+          <ColorPicker x:Name="BatteryColorHighPicker" Height="32" MinWidth="140" IsAlphaEnabled="False"/>
+        </StackPanel>
+        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="6" Margin="0,0,0,12">
+          <TextBlock Text="Mid"/>
+          <ColorPicker x:Name="BatteryColorMidPicker" Height="32" MinWidth="140" IsAlphaEnabled="False"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,16,0">
+          <TextBlock Text="Low"/>
+          <ColorPicker x:Name="BatteryColorLowPicker" Height="32" MinWidth="140" IsAlphaEnabled="False"/>
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
+      <Button x:Name="SaveButton" Content="Save" Click="OnSave"/>
+      <Button x:Name="TestNotificationsButton" Content="Test notifications" Click="OnTestNotifications"/>
+      <Button Content="Close" Click="OnClose"/>
+    </StackPanel>
+  </StackPanel>
+</Window>
