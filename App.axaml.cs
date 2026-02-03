@@ -41,6 +41,7 @@ public partial class App : Application
             EnsureSdkConnected();
             InitializeTray(desktop);
             ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
+            StartMonitor(); // start monitoring immediately so LED applies on launch
             desktop.ShutdownRequested += OnShutdownRequested;
         }
         base.OnFrameworkInitializationCompleted();
@@ -129,6 +130,7 @@ public partial class App : Application
         if (_lightingService is IDisposable disposableLighting)
             disposableLighting.Dispose();
         _lightingService = PlatformAdapters.CreateLightingService(settings);
+        ApplyLightingImmediately(settings, deviceEnumerator, batteryProvider, _lightingService);
         var monitor = new BatteryMonitorService(settings, batteryProvider, deviceEnumerator, trayService, DispatchToUi, _notifier, _lightingService);
         _ = Task.Run(async () =>
         {
@@ -151,5 +153,25 @@ public partial class App : Application
         _monitorCts?.Cancel();
         if (_lightingService is IDisposable disposableLighting)
             disposableLighting.Dispose();
+    }
+
+    private static void ApplyLightingImmediately(
+        MonitorSettings settings,
+        IDeviceEnumerator deviceEnumerator,
+        IBatteryProvider batteryProvider,
+        ILightingService? lightingService)
+    {
+        if (lightingService == null || !settings.EnableBatteryLed)
+            return;
+
+        string? deviceKey = string.IsNullOrWhiteSpace(settings.DeviceKey)
+            ? deviceEnumerator.GetDefaultDeviceKey()
+            : settings.DeviceKey;
+
+        if (string.IsNullOrWhiteSpace(deviceKey))
+            return;
+
+        int? percent = batteryProvider.GetBatteryPercent(deviceKey);
+        lightingService.UpdateBatteryLighting(deviceKey, percent);
     }
 }
