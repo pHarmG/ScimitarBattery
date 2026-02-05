@@ -70,7 +70,10 @@ Output: `artifacts\ScimitarBattery-win-x64.zip`
 
 ## GitHub Release (maintainers)
 
-Push a tag like `v1.0.0` and GitHub Actions will attach the ZIP automatically.
+The release workflow lives at `scripts/release-workflow.yml`.
+To enable it on GitHub, copy it to `.github/workflows/release.yml` and push (requires workflow scope).
+
+Then push a tag like `v1.0.0` and GitHub Actions will attach the ZIP automatically.
 
 ## Config file
 
