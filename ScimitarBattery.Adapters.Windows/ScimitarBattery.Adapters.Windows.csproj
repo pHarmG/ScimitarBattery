@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ScimitarBattery.Adapters.Windows</RootNamespace>
+    <AssemblyName>ScimitarBattery.Adapters.Windows</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScimitarBattery.Core\ScimitarBattery.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
+  </ItemGroup>
+  <!-- Native DLL is copied by the host app (ScimitarBattery) to avoid duplicate publish output -->
+</Project>

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -17,6 +19,8 @@ public partial class SettingsWindow : Window
     private Func<bool>? _ensureConnected;
     private string? _initialStatus;
     private ILightingService? _lightingService;
+    private bool _lightingSupported;
+    private readonly ObservableCollection<LedSelectionItem> _ledSelectionItems = new();
 
     public SettingsWindow()
     {
@@ -39,6 +43,7 @@ public partial class SettingsWindow : Window
         _settings = settings.Clone();
         _onSaved = onSaved;
         _lightingService = PlatformAdapters.CreateLightingService(_settings);
+        _lightingSupported = PlatformAdapters.SupportsLighting;
 
         PollInterval.Value = _settings.PollingIntervalSeconds;
         LowThreshold.Value = _settings.LowThresholdPercent;
@@ -47,7 +52,19 @@ public partial class SettingsWindow : Window
         NotifyCritical.IsChecked = _settings.NotifyOnCritical;
         NotificationRouteCombo.ItemsSource = NotificationRouteItem.CreateDefaultItems();
         NotificationRouteCombo.SelectedItem = NotificationRouteItem.FromRoute(_settings.NotificationRoute);
-        EnableBatteryLed.IsChecked = _settings.EnableBatteryLed;
+        EnableBatteryLed.IsChecked = _settings.EnableBatteryLed && _lightingSupported;
+        if (PlatformAdapters.SupportsStartup)
+        {
+            var startupEnabled = PlatformAdapters.IsStartupEnabled();
+            _settings.StartWithWindows = startupEnabled;
+            StartWithWindows.IsChecked = startupEnabled;
+            StartWithWindows.IsEnabled = true;
+        }
+        else
+        {
+            StartWithWindows.IsChecked = false;
+            StartWithWindows.IsEnabled = false;
+        }
         BatteryLedTargetCombo.ItemsSource = BatteryLedTargetItem.CreateDefaultItems();
         BatteryLedTargetCombo.SelectedItem = BatteryLedTargetItem.FromTarget(_settings.BatteryLedTarget);
         LightingControlModeCombo.ItemsSource = LightingControlModeItem.CreateDefaultItems();
@@ -57,11 +74,15 @@ public partial class SettingsWindow : Window
         BatteryColorLowPicker.Color = ParseColor(_settings.BatteryColorLow, Colors.Red);
         if (!string.IsNullOrWhiteSpace(_initialStatus))
             StatusText.Text = _initialStatus;
+        else if (!_lightingSupported)
+            StatusText.Text = "LED control is not available on this platform yet.";
 
         RefreshDevices.Click += (_, _) => PopulateDevices();
+        DeviceCombo.SelectionChanged += (_, _) => UpdateLedSelectionList();
         TestLedButton.Click += OnTestLed;
         EnableBatteryLed.IsCheckedChanged += (_, _) => UpdateLedControlsEnabled();
         PopulateDevices();
+        LedSelectionList.ItemsSource = _ledSelectionItems;
         UpdateLedControlsEnabled();
     }
 
@@ -94,12 +115,14 @@ public partial class SettingsWindow : Window
         StatusText.Text = devices.Count == 0
             ? "No compatible devices detected."
             : string.Empty;
+        UpdateLedSelectionList();
     }
 
     private void OnSave(object? sender, RoutedEventArgs e)
     {
         if (_settings == null || _onSaved == null) return;
         ApplySettingsFromUi(_settings);
+        UpdateStartupSetting(_settings);
         _lightingService = PlatformAdapters.CreateLightingService(_settings);
         _onSaved(_settings.Clone());
         StatusText.Text = "Settings saved.";
@@ -164,7 +187,11 @@ public partial class SettingsWindow : Window
 
         try
         {
-            lighting.TestLighting(snapshot.DeviceKey);
+            var selected = _ledSelectionItems
+                .Where(item => item.IsSelected && item.IsSelectable)
+                .Select(item => item.LedId)
+                .ToList();
+            lighting.TestLighting(snapshot.DeviceKey, selected.Count > 0 ? selected : null);
             StatusText.Text = "LED test sent (high color).";
         }
         catch (InvalidOperationException ex)
@@ -198,29 +225,91 @@ public partial class SettingsWindow : Window
         target.CriticalThresholdPercent = (int)(CriticalThreshold.Value ?? target.CriticalThresholdPercent);
         target.NotifyOnLow = NotifyLow.IsChecked ?? true;
         target.NotifyOnCritical = NotifyCritical.IsChecked ?? true;
+        target.StartWithWindows = PlatformAdapters.SupportsStartup && (StartWithWindows.IsChecked ?? false);
         if (NotificationRouteCombo.SelectedItem is NotificationRouteItem routeItem)
             target.NotificationRoute = routeItem.Route;
-        target.EnableBatteryLed = EnableBatteryLed.IsChecked ?? false;
+        target.EnableBatteryLed = _lightingSupported && (EnableBatteryLed.IsChecked ?? false);
         if (BatteryLedTargetCombo.SelectedItem is BatteryLedTargetItem targetItem)
             target.BatteryLedTarget = targetItem.Target;
         if (LightingControlModeCombo.SelectedItem is LightingControlModeItem modeItem)
             target.LightingControlMode = modeItem.Mode;
         // Reduce UI confusion: fallback behavior is tied to control mode.
         target.AllowExclusiveFallback = target.LightingControlMode == LightingControlMode.Shared;
+        target.CustomLedIds = _ledSelectionItems
+            .Where(item => item.IsSelected && item.IsSelectable)
+            .Select(item => item.LedId)
+            .ToList();
         target.BatteryColorHigh = ToHex(BatteryColorHighPicker.Color);
         target.BatteryColorMid = ToHex(BatteryColorMidPicker.Color);
         target.BatteryColorLow = ToHex(BatteryColorLowPicker.Color);
     }
 
+    private void UpdateStartupSetting(MonitorSettings settings)
+    {
+        if (!PlatformAdapters.SupportsStartup)
+            return;
+
+        if (!PlatformAdapters.TrySetStartupEnabled(settings.StartWithWindows, out var error))
+        {
+            StatusText.Text = string.IsNullOrWhiteSpace(error)
+                ? "Unable to update Windows startup setting."
+                : $"Unable to update Windows startup setting: {error}";
+        }
+    }
+
     private void UpdateLedControlsEnabled()
     {
-        bool enabled = EnableBatteryLed.IsChecked ?? false;
+        EnableBatteryLed.IsEnabled = _lightingSupported;
+        bool enabled = _lightingSupported && (EnableBatteryLed.IsChecked ?? false);
         BatteryLedTargetCombo.IsEnabled = enabled;
         LightingControlModeCombo.IsEnabled = enabled;
         TestLedButton.IsEnabled = enabled;
         BatteryColorHighPicker.IsEnabled = enabled;
         BatteryColorMidPicker.IsEnabled = enabled;
         BatteryColorLowPicker.IsEnabled = enabled;
+        LedSelectionList.IsEnabled = enabled;
+    }
+
+    private void UpdateLedSelectionList()
+    {
+        _ledSelectionItems.Clear();
+        if (!_lightingSupported || _settings == null)
+            return;
+
+        if (DeviceCombo.SelectedItem is not DeviceComboItem selected ||
+            string.IsNullOrWhiteSpace(selected.DeviceKey))
+            return;
+
+        if (_ensureConnected != null && !_ensureConnected())
+            return;
+
+        var snapshot = _settings.Clone();
+        ApplySettingsFromUi(snapshot);
+        snapshot.EnableBatteryLed = true;
+
+        var lighting = PlatformAdapters.CreateLightingService(snapshot);
+        if (lighting == null)
+            return;
+
+        try
+        {
+            var leds = lighting.GetAvailableLeds(selected.DeviceKey);
+            var preferred = _settings.CustomLedIds;
+            foreach (var led in leds)
+            {
+                bool selectedByDefault = led.IsSelectable && (preferred.Count == 0 || preferred.Contains(led.LedId));
+                var item = new LedSelectionItem(led.LedId, led.Label, led.IsSelectable)
+                {
+                    IsSelected = selectedByDefault
+                };
+                _ledSelectionItems.Add(item);
+            }
+        }
+        finally
+        {
+            if (lighting is IDisposable disposable)
+                disposable.Dispose();
+        }
     }
 
     private static Color ParseColor(string? hex, Color fallback)
@@ -290,7 +379,8 @@ public partial class SettingsWindow : Window
         public static List<BatteryLedTargetItem> CreateDefaultItems() => new()
         {
             new("Logo (best guess)", BatteryLedTarget.LogoBestGuess),
-            new("All LEDs", BatteryLedTarget.AllLeds)
+            new("All LEDs", BatteryLedTarget.AllLeds),
+            new("Selected LEDs", BatteryLedTarget.CustomSelection)
         };
 
         public static BatteryLedTargetItem FromTarget(BatteryLedTarget target)
@@ -313,5 +403,38 @@ public partial class SettingsWindow : Window
         {
             return CreateDefaultItems().First(i => i.Mode == mode);
         }
+    }
+
+    private sealed class LedSelectionItem : INotifyPropertyChanged
+    {
+        private bool _isSelected;
+
+        public LedSelectionItem(int ledId, string label, bool isSelectable)
+        {
+            LedId = ledId;
+            Label = label;
+            IsSelectable = isSelectable;
+            _isSelected = isSelectable;
+        }
+
+        public int LedId { get; }
+        public string Label { get; }
+        public bool IsSelectable { get; }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (!IsSelectable)
+                    return;
+                if (_isSelected == value)
+                    return;
+                _isSelected = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -40,7 +41,10 @@ public partial class App : Application
             _settings = SettingsStorage.Load() ?? MonitorSettings.CreateDefaults();
             EnsureSdkConnected();
             InitializeTray(desktop);
-            ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
+            bool autoStart = desktop.Args != null &&
+                             desktop.Args.Any(arg => string.Equals(arg, "--autostart", StringComparison.OrdinalIgnoreCase));
+            if (!(_settings.StartWithWindows && autoStart))
+                ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
             StartMonitor(); // start monitoring immediately so LED applies on launch
             desktop.ShutdownRequested += OnShutdownRequested;
         }

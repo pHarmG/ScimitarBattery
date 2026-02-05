@@ -1,8 +1,16 @@
 bin/
 obj/
 .vscode/
+.vs/
 *.user
 *.suo
 *.cache
 *.log
 publish/
+artifacts/
+packaging/
+*.pfx
+*.msix
+*.appx
+*.appxbundle
+*.cer

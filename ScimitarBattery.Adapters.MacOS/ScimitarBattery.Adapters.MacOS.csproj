@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ScimitarBattery.Adapters.MacOS</RootNamespace>
+    <AssemblyName>ScimitarBattery.Adapters.MacOS</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScimitarBattery.Core\ScimitarBattery.Core.csproj" />
+  </ItemGroup>
+</Project>
