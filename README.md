@@ -111,7 +111,3 @@ when building. If you obtain the DLL from Corsair’s SDK, put it in `ScimitarBa
 - **Logo vs Side LEDs**: use the “LEDs to test” list to target Logo or Side explicitly.
 
 ## Adding macOS support later
-
-1. Add a new project (e.g. `ScimitarBattery.Adapters.MacOS`) that implements `IBatteryProvider` and `IDeviceEnumerator` (and optionally `INotifier`).
-2. Use a device key scheme suitable for macOS (e.g. `HID:<vid>:<pid>:<serial>`).
-3. In the host app, detect OS and register the appropriate adapter (no core rewrites).
