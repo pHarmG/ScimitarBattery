@@ -23,11 +23,11 @@ Other Corsair devices may enumerate LEDs differently and are not guaranteed to w
 
 This project distributes a **portable ZIP** for easy GitHub installs:
 
-1. Download the latest `ScimitarBattery-win-x64.zip` from GitHub Releases.
+1. Download the latest `ScimitarBattery-win-x64.zip` from [Releases](https://github.com/pHarmG/ScimitarBattery/releases).
 2. Extract it to any folder.
 3. Run `ScimitarBattery.exe`.
 
-If Windows shows SmartScreen, click **More info** → **Run anyway**.
+If Windows shows SmartScreen warning, click **More info** → **Run anyway**.
 
 ### Start with Windows (optional)
 
