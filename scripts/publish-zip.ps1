@@ -1,5 +1,6 @@
 Param(
-    [string]$Runtime = "win-x64"
+    [string]$Runtime = "win-x64",
+    [string]$Framework = "net8.0-windows10.0.19041.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +16,7 @@ if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
 
 dotnet publish $project `
   -c Release `
+  -f $Framework `
   -r $Runtime `
   --self-contained true `
   -p:PublishSingleFile=true `
