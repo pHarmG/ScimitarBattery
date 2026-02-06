@@ -12,9 +12,10 @@ A Windows tray utility that shows Corsair mouse (e.g. Scimitar) battery level vi
 
 ## Requirements
 
-- .NET 8
+
 - Windows (iCUE installed and running, SDK enabled)
 - Corsair iCUE SDK DLL (see below)
+- .NET 8 (to build locally)
 
 This app is tuned for the Scimitar RGB Elite Wireless LED layout (Logo + Side).
 Other Corsair devices may enumerate LEDs differently and are not guaranteed to work.
@@ -106,7 +107,7 @@ when building. If you obtain the DLL from Corsair’s SDK, put it in `ScimitarBa
 
 ## Troubleshooting
 
-- **“iCUE SDK not available”**: ensure iCUE is running and SDK is enabled in iCUE settings.
+- **“iCUE SDK not available”**: ensure iCUE is running and SDK is enabled in iCUE settings (Settings➡️SDK➡️Enable iCUE SDK).
 - **No LEDs**: pick the correct device and test LED from Settings.
 - **Logo vs Side LEDs**: use the “LEDs to test” list to target Logo or Side explicitly.
 
