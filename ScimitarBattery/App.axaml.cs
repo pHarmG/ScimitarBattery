@@ -35,20 +35,32 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        try
         {
-            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            _settings = SettingsStorage.Load() ?? MonitorSettings.CreateDefaults();
-            EnsureSdkConnected();
-            InitializeTray(desktop);
-            bool autoStart = desktop.Args != null &&
-                             desktop.Args.Any(arg => string.Equals(arg, "--autostart", StringComparison.OrdinalIgnoreCase));
-            if (!(_settings.StartWithWindows && autoStart))
-                ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
-            StartMonitor(); // start monitoring immediately so LED applies on launch
-            desktop.ShutdownRequested += OnShutdownRequested;
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                _settings = SettingsStorage.Load() ?? MonitorSettings.CreateDefaults();
+                EnsureSdkConnected();
+                InitializeTray(desktop);
+                bool autoStart = desktop.Args != null &&
+                                 desktop.Args.Any(arg => string.Equals(arg, "--autostart", StringComparison.OrdinalIgnoreCase));
+                if (!(_settings.StartWithWindows && autoStart))
+                    ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
+                StartMonitor(); // start monitoring immediately so LED applies on launch
+                desktop.ShutdownRequested += OnShutdownRequested;
+            }
         }
-        base.OnFrameworkInitializationCompleted();
+        catch (Exception ex)
+        {
+            Program.ShowStartupError(ex);
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                desktop.Shutdown();
+        }
+        finally
+        {
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 
     private void InitializeTray(IClassicDesktopStyleApplicationLifetime desktop)

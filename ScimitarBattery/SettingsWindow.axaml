@@ -4,7 +4,8 @@
         Title="Scimitar Battery Monitor"
         Width="520" Height="560" MinWidth="520" MinHeight="560"
         SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="avares://ScimitarBattery/Assets/app-icon.png">
   <StackPanel Margin="24" Spacing="16">
     <TextBlock Text="Scimitar Battery Monitor" FontWeight="Bold" FontSize="18"/>
     <TextBlock Text="Configure device, poll interval, and thresholds." Opacity="0.8" TextWrapping="Wrap"/>
@@ -81,29 +82,28 @@
           <TextBlock Text="Control mode"/>
           <ComboBox x:Name="LightingControlModeCombo" HorizontalAlignment="Stretch"/>
         </StackPanel>
-        <StackPanel Spacing="6" Width="110">
-          <TextBlock Text=""/>
-          <Button x:Name="TestLedButton" Content="Test LED (High)"/>
-        </StackPanel>
       </StackPanel>
 
       <TextBlock Text="LEDs to test" FontWeight="Bold" Foreground="#8FD3FF" Margin="0,8,0,0"/>
-      <ItemsControl x:Name="LedSelectionList">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel Orientation="Horizontal"/>
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,16,8" Width="240">
-              <Border Width="12" Height="12" Background="#8FD3FF" CornerRadius="6" VerticalAlignment="Center"/>
-              <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding IsSelectable}" VerticalAlignment="Center"/>
-              <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <ItemsControl x:Name="LedSelectionList">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,16,8" Width="240">
+                <Border Width="12" Height="12" Background="#8FD3FF" CornerRadius="6" VerticalAlignment="Center"/>
+                <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding IsSelectable}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button x:Name="TestLedButton" Content="Test LED (High)" VerticalAlignment="Center" Margin="0,0,0,8"/>
+      </StackPanel>
 
       <!-- Colors are now aligned with thresholds above. -->
     </StackPanel>

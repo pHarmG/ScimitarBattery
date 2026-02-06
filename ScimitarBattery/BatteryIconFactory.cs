@@ -15,7 +15,6 @@ public static class BatteryIconFactory
 {
     public const int DefaultSize = 32;
 
-    // You can set this once if you ever want black icons (light tray), etc.
     public static Color ForegroundColor { get; set; } = Colors.White;
 
     public static WindowIcon CreateIcon(int? percent, int size = DefaultSize)
@@ -25,33 +24,36 @@ public static class BatteryIconFactory
         var bmp = new RenderTargetBitmap(new PixelSize(size, size));
         using var ctx = bmp.CreateDrawingContext(true);
 
-        // 1) Thicker-than-logical outline (tray optics > math purity)
+        // Thicker-than-logical outline (tray optics > math purity)
         var stroke = Clamp(size * 0.12, 2.0, 3.2);
-
-        // Half-stroke inset keeps edges from getting clipped.
         var inset = Math.Ceiling(stroke / 2.0);
 
         var totalW = size - inset * 2;
         var totalH = size - inset * 2;
 
-        // Battery proportions tuned for readability
-        var bodyH = totalH * 0.56;
+        // --- proportions (wider battery look) ---
+
+        // Nub should be slimmer than before
+        var nubW = totalW * 0.11;
+
+        // Gap should be small (big gaps make the battery feel narrow)
+        var gap = Math.Max(0.5, totalW * 0.015);
+
+        // Body gets the rest (wider silhouette)
+        var bodyW = totalW - nubW - gap;
+        
+        var bodyX = inset;
+        var nubX  = bodyX + bodyW + gap;
+
+        // Keep height as you had it (tallness is fine); widen is the goal
+        var bodyH = totalH * 0.62;
         var bodyY = inset + (totalH - bodyH) / 2.0;
 
-        // 5) Chunkier nub
-        var nubW = totalW * 0.16;
-
-        // Slight gap between body and nub helps separation after downsampling
-        var gap = Math.Max(1.0, totalW * 0.03);
-        var bodyW = totalW - nubW - gap;
-
-        var bodyX = inset;
-        var nubX = bodyX + bodyW + gap;
-
+        // Nub height slightly larger so it feels less “twiggy”
         var nubH = bodyH * 0.34;
         var nubY = bodyY + (bodyH - nubH) / 2.0;
 
-        // Keep rounding on the shell only (fill stays square)
+
         var bodyR = Clamp(bodyH * 0.14, 1.0, 4.0);
         var nubR  = Clamp(nubH * 0.22, 1.0, 3.0);
 
@@ -66,19 +68,10 @@ public static class BatteryIconFactory
             lineJoin: PenLineJoin.Round
         );
 
-        // 1) Solid-ish shell fill (high alpha) so silhouette reads in the tray
-        var shellFill = new SolidColorBrush(Color.FromArgb(
-            180,
-            ForegroundColor.R,
-            ForegroundColor.G,
-            ForegroundColor.B
-        ));
+        // Hollow outline only (no interior shell fill)
+        ctx.DrawRectangle(null, outlinePen, bodyRect, bodyR, bodyR);
+        ctx.DrawRectangle(null, outlinePen, nubRect,  nubR,  nubR);
 
-        // Draw shell (body + nub)
-        ctx.DrawRectangle(shellFill, outlinePen, bodyRect, bodyR, bodyR);
-        ctx.DrawRectangle(shellFill, outlinePen, nubRect,  nubR,  nubR);
-
-        // Draw interior content (fill / unknown)
         DrawFill(ctx, percent, bodyRect, stroke, ForegroundColor);
 
         return new WindowIcon(bmp);
@@ -86,8 +79,7 @@ public static class BatteryIconFactory
 
     private static void DrawFill(DrawingContext ctx, int? percent, Rect bodyRect, double stroke, Color fgColor)
     {
-        // 4) Increased inner padding to preserve a clear gutter at small sizes
-        var pad = Math.Ceiling(stroke * 1.6);
+        var pad = Math.Ceiling(stroke * 1.25);
 
         var inner = new Rect(
             bodyRect.X + pad,
@@ -99,67 +91,49 @@ public static class BatteryIconFactory
         if (inner.Width < 1 || inner.Height < 1)
             return;
 
+        // Slight translucency so outline dominates at small sizes
+        var fillBrush = new SolidColorBrush(Color.FromArgb(
+            230, fgColor.R, fgColor.G, fgColor.B
+        ));
+
         if (!percent.HasValue)
         {
-            // Unknown state: simple centered bar (readable at 16px)
-            var barW = inner.Width * 0.22;
-            var barH = inner.Height * 0.70;
+            // Unknown state: receding wedge/trapezoid (no dot, no inner contour)
+            var wedgeW = inner.Width * 0.45;
 
-            var barRect = SnapRect(new Rect(
-                inner.X + (inner.Width - barW) / 2.0,
-                inner.Y + (inner.Height - barH) / 2.0,
-                barW,
-                barH
-            ));
+            var p0 = new Point(inner.X, inner.Y);
+            var p1 = new Point(inner.X + wedgeW, inner.Y);
+            var p2 = new Point(inner.X + wedgeW * 0.55, inner.Bottom);
+            var p3 = new Point(inner.X, inner.Bottom);
 
-            var unknownBrush = new SolidColorBrush(Color.FromArgb(
-                220, fgColor.R, fgColor.G, fgColor.B
-            ));
+            var geo = new StreamGeometry();
+            using (var g = geo.Open())
+            {
+                g.BeginFigure(p0, isFilled: true);
+                g.LineTo(p1);
+                g.LineTo(p2);
+                g.LineTo(p3);
+                g.EndFigure(isClosed: true);
+            }
 
-            ctx.DrawRectangle(unknownBrush, null, barRect);
+            ctx.DrawGeometry(fillBrush, null, geo);
             return;
         }
 
         var p = Math.Clamp(percent.Value, 0, 100);
-
-        // Monochrome urgency: alpha changes only (no colors)
-        byte alpha = p switch
-        {
-            <= 10 => (byte)255,
-            <= 20 => (byte)235,
-            _     => (byte)220
-        };
-
-        var fillBrush = new SolidColorBrush(Color.FromArgb(alpha, fgColor.R, fgColor.G, fgColor.B));
-
         var fillW = inner.Width * (p / 100.0);
 
-        // Avoid rendering tiny slivers that look like noise after scaling
         if (fillW < 0.9)
             return;
 
         var fillRect = SnapRect(new Rect(inner.X, inner.Y, fillW, inner.Height));
-
-        // 3) Fill is rectangular (no rounded corners) to avoid blur/mush in tray
         ctx.DrawRectangle(fillBrush, null, fillRect);
-
-        // Optional small “critical notch” at <=10% to make “low” more obvious
-        if (p <= 10)
-        {
-            var notchW = Math.Max(1.0, Math.Round(inner.Width * 0.06));
-            var notchRect = SnapRect(new Rect(inner.Right - notchW, inner.Y, notchW, inner.Height));
-
-            var notchBrush = new SolidColorBrush(Color.FromArgb(
-                90, fgColor.R, fgColor.G, fgColor.B
-            ));
-
-            ctx.DrawRectangle(notchBrush, null, notchRect);
-        }
     }
+
 
     private static Rect SnapRect(Rect r)
     {
-        // Snap to half pixels to reduce outline blur after rasterization
+        // Snap to half pixels to reduce blur after rasterization
         double Snap(double v) => Math.Round(v * 2, MidpointRounding.AwayFromZero) / 2.0;
         return new Rect(Snap(r.X), Snap(r.Y), Snap(r.Width), Snap(r.Height));
     }

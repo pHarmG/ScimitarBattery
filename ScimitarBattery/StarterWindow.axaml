@@ -4,7 +4,8 @@
         Title="Scimitar Battery"
         Width="320" Height="140"
         WindowStartupLocation="CenterScreen"
-        CanResize="False">
+        CanResize="False"
+        Icon="avares://ScimitarBattery/Assets/app-icon.png">
   <StackPanel Margin="20" Spacing="12">
     <TextBlock Text="Scimitar Battery is running in the system tray." TextWrapping="Wrap"/>
     <TextBlock Text="Close this window to keep it running in the background. Use the tray icon for Settings or Exit." TextWrapping="Wrap" Opacity="0.9"/>

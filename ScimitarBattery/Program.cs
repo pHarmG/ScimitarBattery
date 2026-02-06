@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Avalonia;
 
 namespace ScimitarBattery;
@@ -8,7 +9,34 @@ internal static class Program
 {
     [STAThread]
     public static void Main(string[] args)
-        => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    {
+        InstallGlobalExceptionHandlers();
+        try
+        {
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            ShowStartupError(ex);
+        }
+    }
+
+    private static void InstallGlobalExceptionHandlers()
+    {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex)
+                ShowStartupError(ex);
+            else
+                ShowStartupError(new Exception("Unhandled exception: " + e.ExceptionObject));
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            ShowStartupError(e.Exception);
+            e.SetObserved();
+        };
+    }
 
     internal static void ShowStartupError(Exception ex)
     {
