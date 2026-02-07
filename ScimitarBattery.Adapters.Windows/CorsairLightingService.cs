@@ -106,6 +106,13 @@ public sealed class CorsairLightingService : ILightingService, IDisposable
             _loggedDeviceDetails = true;
         }
 
+        if (_lastBucket == bucket)
+        {
+            // Lightweight keepalive push each poll: refresh target LEDs without full re-application.
+            TrySetColors(deviceId, colors);
+            return;
+        }
+
         if (_target == BatteryLedTarget.CustomSelection)
         {
             if (ApplySelectionOnly(deviceId, ids, colors))

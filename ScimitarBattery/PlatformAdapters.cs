@@ -50,23 +50,38 @@ internal static class PlatformAdapters
     public static IDeviceEnumerator CreateDeviceEnumerator() => new ScimitarBattery.Adapters.MacOS.MacDeviceEnumerator();
     public static IBatteryProvider CreateBatteryProvider() => new ScimitarBattery.Adapters.MacOS.MacBatteryProvider();
     public static INotifier CreateNotifier() => new ScimitarBattery.Adapters.MacOS.MacNotifierStub();
-    public static bool SupportsLighting => false;
-    public static bool SupportsStartup => false;
-    public static ILightingService? CreateLightingService(MonitorSettings settings) => null;
+    public static bool SupportsLighting => true;
+    public static bool SupportsStartup => true;
+    public static ILightingService? CreateLightingService(MonitorSettings settings)
+        => settings.EnableBatteryLed
+            ? new ScimitarBattery.Adapters.MacOS.MacCorsairLightingService(
+                settings.BatteryLedTarget,
+                settings.CustomLedIds,
+                settings.LightingControlMode,
+                settings.AllowExclusiveFallback,
+                settings.LowThresholdPercent,
+                settings.CriticalThresholdPercent,
+                settings.BatteryColorHigh,
+                settings.BatteryColorMid,
+                settings.BatteryColorLow)
+            : null;
 
     public static bool EnsureSdkConnected(ref bool connected, ref string? status)
     {
-        connected = true;
-        status = null;
-        return true;
-    }
-
-    public static bool IsStartupEnabled() => false;
-
-    public static bool TrySetStartupEnabled(bool enabled, out string? error)
-    {
-        error = "Startup control is not available on this platform.";
+        if (connected)
+            return true;
+        if (ScimitarBattery.Adapters.MacOS.MacCorsairSdkBridge.EnsureConnected(ref status))
+        {
+            connected = true;
+            return true;
+        }
         return false;
     }
+
+    public static bool IsStartupEnabled()
+        => ScimitarBattery.Adapters.MacOS.MacStartupManager.IsEnabled();
+
+    public static bool TrySetStartupEnabled(bool enabled, out string? error)
+        => ScimitarBattery.Adapters.MacOS.MacStartupManager.TrySetEnabled(enabled, out error);
 #endif
 }

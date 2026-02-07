@@ -76,6 +76,8 @@ public sealed class BatteryMonitorService
 
         int? percent = _batteryProvider.GetBatteryPercent(deviceKey);
         BatterySeverity severity = ComputeSeverity(percent);
+        // Keep device lighting alive every polling cycle (helps after transient reconnects).
+        _lightingService?.UpdateBatteryLighting(deviceKey, percent);
 
         bool severityChanged = severity != _lastSeverity;
         int? lastBucket = _lastPercent.HasValue ? Bucket(_lastPercent.Value) : null;
@@ -90,7 +92,6 @@ public sealed class BatteryMonitorService
             string tooltipDeviceName = displayName;
             int? tooltipPercent = percent;
             _dispatchToUi(() => _trayIconService.UpdateBatteryState(tooltipDeviceName, tooltipPercent));
-            _lightingService?.UpdateBatteryLighting(deviceKey, percent);
 
             if (percent.HasValue)
             {

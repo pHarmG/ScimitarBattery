@@ -9,4 +9,10 @@
   <ItemGroup>
     <ProjectReference Include="..\ScimitarBattery.Core\ScimitarBattery.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SDK/libiCUESDK.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 </Project>

@@ -35,3 +35,38 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/ScimitarBattery-win-x64.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish macOS (arm64)
+        run: dotnet publish ScimitarBattery/ScimitarBattery.csproj -c Release -f net8.0 -r osx-arm64 --self-contained true -o publish/osx-arm64
+
+      - name: Publish macOS (x64)
+        run: dotnet publish ScimitarBattery/ScimitarBattery.csproj -c Release -f net8.0 -r osx-x64 --self-contained true -o publish/osx-x64
+
+      - name: Zip macOS artifacts
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent publish/osx-arm64 artifacts/ScimitarBattery-osx-arm64.zip
+          ditto -c -k --sequesterRsrc --keepParent publish/osx-x64 artifacts/ScimitarBattery-osx-x64.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScimitarBattery-macos
+          path: artifacts/ScimitarBattery-osx-*.zip
+
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/ScimitarBattery-osx-arm64.zip
+            artifacts/ScimitarBattery-osx-x64.zip

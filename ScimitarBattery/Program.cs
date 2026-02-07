@@ -44,7 +44,9 @@ internal static class Program
         {
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ScimitarBattery");
             Directory.CreateDirectory(folder);
-            File.WriteAllText(Path.Combine(folder, "startup-error.txt"), ex.ToString());
+            var path = Path.Combine(folder, "startup-error.txt");
+            var stamp = DateTimeOffset.Now.ToString("O");
+            File.AppendAllText(path, $"[{stamp}] {ex}{Environment.NewLine}{Environment.NewLine}");
         }
         catch { }
         if (OperatingSystem.IsWindows())

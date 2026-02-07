@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="ScimitarBattery.Core/ScimitarBattery.Core.csproj" />
+  <Project Path="ScimitarBattery.Adapters.MacOS/ScimitarBattery.Adapters.MacOS.csproj" />
   <Project Path="ScimitarBattery.Adapters.Windows/ScimitarBattery.Adapters.Windows.csproj" />
   <Project Path="ScimitarBattery/ScimitarBattery.csproj" />
 </Solution>

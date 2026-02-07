@@ -30,7 +30,7 @@
       <StackPanel Orientation="Horizontal" Spacing="16">
         <StackPanel Spacing="6" Width="150">
           <TextBlock Text="Poll (sec)"/>
-          <NumericUpDown x:Name="PollInterval" Minimum="1" Maximum="3600" Value="30" Increment="5"/>
+          <NumericUpDown x:Name="PollInterval" Minimum="1" Maximum="3600" Value="240" Increment="5"/>
         </StackPanel>
       </StackPanel>
     </StackPanel>
@@ -67,26 +67,26 @@
 
       <StackPanel Spacing="6" Margin="0,6,0,0">
         <TextBlock Text="Startup" FontWeight="Bold" Foreground="#8FD3FF"/>
-        <CheckBox x:Name="StartWithWindows" Content="Start with Windows (background)"/>
-        <TextBlock Text="Runs quietly in the tray. You can open Settings from the tray icon." Opacity="0.7" FontSize="11" TextWrapping="Wrap"/>
+        <CheckBox x:Name="StartWithWindows" Content="Start at login"/>
+        <TextBlock x:Name="StartupHintText" Text="Runs quietly in the tray. You can open Settings from the tray icon." Opacity="0.7" FontSize="11" TextWrapping="Wrap"/>
       </StackPanel>
 
       <TextBlock Text="Device LED" FontWeight="Bold" Foreground="#8FD3FF" Margin="0,8,0,0"/>
       <CheckBox x:Name="EnableBatteryLed" Content="Use mouse LED to indicate battery"/>
-      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
-        <StackPanel Spacing="6" Width="180">
+      <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+        <StackPanel Spacing="6" Grid.Column="0">
           <TextBlock Text="LED target"/>
           <ComboBox x:Name="BatteryLedTargetCombo" HorizontalAlignment="Stretch"/>
         </StackPanel>
-        <StackPanel Spacing="6" Width="180">
+        <StackPanel Spacing="6" Grid.Column="1" Margin="12,0,0,0">
           <TextBlock Text="Control mode"/>
           <ComboBox x:Name="LightingControlModeCombo" HorizontalAlignment="Stretch"/>
         </StackPanel>
-      </StackPanel>
+      </Grid>
 
       <TextBlock Text="LEDs to test" FontWeight="Bold" Foreground="#8FD3FF" Margin="0,8,0,0"/>
-      <StackPanel Orientation="Horizontal" Spacing="12">
-        <ItemsControl x:Name="LedSelectionList">
+      <Grid ColumnDefinitions="*,Auto">
+        <ItemsControl x:Name="LedSelectionList" Grid.Column="0">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <WrapPanel Orientation="Horizontal"/>
@@ -94,7 +94,7 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,16,8" Width="240">
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,24,8">
                 <Border Width="12" Height="12" Background="#8FD3FF" CornerRadius="6" VerticalAlignment="Center"/>
                 <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding IsSelectable}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
@@ -102,8 +102,8 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Button x:Name="TestLedButton" Content="Test LED (High)" VerticalAlignment="Center" Margin="0,0,0,8"/>
-      </StackPanel>
+        <Button x:Name="TestLedButton" Content="Test LED (High)" Grid.Column="1" VerticalAlignment="Top" Margin="12,0,0,0"/>
+      </Grid>
 
       <!-- Colors are now aligned with thresholds above. -->
     </StackPanel>

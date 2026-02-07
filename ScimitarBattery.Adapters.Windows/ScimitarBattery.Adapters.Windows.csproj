@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>ScimitarBattery.Adapters.Windows</RootNamespace>
     <AssemblyName>ScimitarBattery.Adapters.Windows</AssemblyName>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ScimitarBattery.Core\ScimitarBattery.Core.csproj" />

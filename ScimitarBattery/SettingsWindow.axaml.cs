@@ -59,11 +59,13 @@ public partial class SettingsWindow : Window
             _settings.StartWithWindows = startupEnabled;
             StartWithWindows.IsChecked = startupEnabled;
             StartWithWindows.IsEnabled = true;
+            StartupHintText.Text = "Runs quietly in the tray. You can open Settings from the tray icon.";
         }
         else
         {
             StartWithWindows.IsChecked = false;
             StartWithWindows.IsEnabled = false;
+            StartupHintText.Text = "Start at login is currently unavailable on macOS.";
         }
         BatteryLedTargetCombo.ItemsSource = BatteryLedTargetItem.CreateDefaultItems();
         BatteryLedTargetCombo.SelectedItem = BatteryLedTargetItem.FromTarget(_settings.BatteryLedTarget);
@@ -110,12 +112,44 @@ public partial class SettingsWindow : Window
         }));
 
         DeviceCombo.ItemsSource = items;
-        DeviceCombo.SelectedItem = items.FirstOrDefault(i => i.DeviceKey == _settings.DeviceKey)
-            ?? items.FirstOrDefault(i => i.DeviceKey == null);
+        DeviceCombo.SelectedItem = ResolvePreferredDeviceItem(items);
         StatusText.Text = devices.Count == 0
             ? "No compatible devices detected."
             : string.Empty;
         UpdateLedSelectionList();
+    }
+
+    private DeviceComboItem? ResolvePreferredDeviceItem(IReadOnlyList<DeviceComboItem> items)
+    {
+        if (_settings != null && !string.IsNullOrWhiteSpace(_settings.DeviceKey))
+        {
+            var saved = items.FirstOrDefault(i => i.DeviceKey == _settings.DeviceKey);
+            if (saved != null)
+                return saved;
+        }
+
+        var preferred = _enumerator?.GetDefaultDeviceKey();
+        if (!string.IsNullOrWhiteSpace(preferred))
+        {
+            var match = items.FirstOrDefault(i => i.DeviceKey == preferred);
+            if (match != null)
+                return match;
+        }
+
+        var scimitar = items.FirstOrDefault(i =>
+            !string.IsNullOrWhiteSpace(i.DisplayName) &&
+            i.DisplayName.Contains("SCIMITAR", StringComparison.OrdinalIgnoreCase));
+        if (scimitar != null)
+            return scimitar;
+
+        var mouse = items.FirstOrDefault(i =>
+            !string.IsNullOrWhiteSpace(i.DisplayName) &&
+            i.DisplayName.Contains("MOUSE", StringComparison.OrdinalIgnoreCase));
+        if (mouse != null)
+            return mouse;
+
+        return items.FirstOrDefault(i => i.DeviceKey != null)
+            ?? items.FirstOrDefault(i => i.DeviceKey == null);
     }
 
     private void OnSave(object? sender, RoutedEventArgs e)
@@ -252,8 +286,8 @@ public partial class SettingsWindow : Window
         if (!PlatformAdapters.TrySetStartupEnabled(settings.StartWithWindows, out var error))
         {
             StatusText.Text = string.IsNullOrWhiteSpace(error)
-                ? "Unable to update Windows startup setting."
-                : $"Unable to update Windows startup setting: {error}";
+                ? "Unable to update startup setting."
+                : $"Unable to update startup setting: {error}";
         }
     }
 

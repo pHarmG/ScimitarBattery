@@ -41,13 +41,25 @@ public partial class App : Application
             {
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 _settings = SettingsStorage.Load() ?? MonitorSettings.CreateDefaults();
-                EnsureSdkConnected();
-                InitializeTray(desktop);
+                TryStartupStep("EnsureSdkConnected", EnsureSdkConnected);
+                TryStartupStep("InitializeTray", () =>
+                {
+                    InitializeTray(desktop);
+                    return true;
+                });
                 bool autoStart = desktop.Args != null &&
                                  desktop.Args.Any(arg => string.Equals(arg, "--autostart", StringComparison.OrdinalIgnoreCase));
                 if (!(_settings.StartWithWindows && autoStart))
-                    ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
-                StartMonitor(); // start monitoring immediately so LED applies on launch
+                    TryStartupStep("ShowSettingsWindow", () =>
+                    {
+                        ShowSettingsWindow(desktop); // open settings on launch (as if from tray menu)
+                        return true;
+                    });
+                TryStartupStep("StartMonitor", () =>
+                {
+                    StartMonitor(); // start monitoring immediately so LED applies on launch
+                    return true;
+                });
                 desktop.ShutdownRequested += OnShutdownRequested;
             }
         }
@@ -60,6 +72,20 @@ public partial class App : Application
         finally
         {
             base.OnFrameworkInitializationCompleted();
+        }
+    }
+
+    private bool TryStartupStep(string stepName, Func<bool> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (Exception ex)
+        {
+            Program.ShowStartupError(new InvalidOperationException($"Startup step failed: {stepName}", ex));
+            _sdkStatus = $"Startup warning ({stepName}): {ex.Message}";
+            return false;
         }
     }
 

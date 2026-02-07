@@ -4,7 +4,7 @@ namespace ScimitarBattery.Core;
 
 /// <summary>
 /// User-configurable settings for battery monitoring. Platform-agnostic.
-/// First-run defaults: poll=30s, low=30%, critical=15%.
+/// First-run defaults: poll=240s, low=30%, critical=15%.
 /// </summary>
 public sealed class MonitorSettings
 {
@@ -14,13 +14,13 @@ public sealed class MonitorSettings
     /// <summary>Human-readable device name for display.</summary>
     public string? DeviceDisplayName { get; set; }
 
-    /// <summary>Poll interval in seconds. Clamped to 1–3600. Default 30.</summary>
+    /// <summary>Poll interval in seconds. Clamped to 1–3600. Default 240.</summary>
     public int PollingIntervalSeconds
     {
         get => _pollingIntervalSeconds;
         set => _pollingIntervalSeconds = Math.Clamp(value, 1, 3600);
     }
-    private int _pollingIntervalSeconds = 30;
+    private int _pollingIntervalSeconds = 240;
 
     /// <summary>Low threshold (0–100). Default 30.</summary>
     public int LowThresholdPercent
@@ -109,7 +109,7 @@ public sealed class MonitorSettings
         };
     }
 
-    /// <summary>Creates first-run defaults: poll=30s, low=30%, critical=15%.</summary>
+    /// <summary>Creates first-run defaults: poll=240s, low=30%, critical=15%.</summary>
     public static MonitorSettings CreateDefaults() => new();
 }
 

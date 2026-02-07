@@ -2,7 +2,9 @@
 
 Designed for **Corsair Scimitar RGB Elite Wireless** (Windows + iCUE SDK).
 
-A Windows tray utility that shows Corsair mouse (e.g. Scimitar) battery level via the iCUE SDK. Built with **Avalonia** for cross-platform UI (Windows-first; macOS support can be added via a new platform adapter).
+A tray utility that shows Corsair mouse (e.g. Scimitar) battery level via the iCUE SDK. Built with **Avalonia** for cross-platform UI.
+
+**macOS status:** the app UI and tray run on macOS and will attempt to enumerate Corsair HID devices via `ioreg`. Battery reporting is best-effort and may return `n/a` depending on the device/firmware.
 
 ## Architecture
 
@@ -54,6 +56,14 @@ A small “Scimitar Battery is running in the system tray” window appears once
 
 If the app exits immediately or nothing appears, check for an error message box. On startup failure, the app also writes `%AppData%\ScimitarBattery\startup-error.txt` with the exception details. If you see platform or rendering errors, try a **self-contained** publish (`--self-contained true`).
 
+## Run on macOS (experimental)
+
+```bash
+dotnet run --project ScimitarBattery -f net8.0
+```
+
+If no compatible devices are detected, the settings UI will show "No compatible devices detected."
+
 ## Publish for Windows
 
 ```bash
@@ -67,6 +77,20 @@ dotnet publish ScimitarBattery/ScimitarBattery.csproj -c Release -r win-x64 --se
 ```
 
 Output is in `publish/`. Run `ScimitarBattery.exe` from there.
+
+## Publish for macOS (experimental)
+
+Apple Silicon:
+
+```bash
+dotnet publish ScimitarBattery/ScimitarBattery.csproj -c Release -f net8.0 -r osx-arm64 --self-contained true -o publish/osx-arm64
+```
+
+Intel:
+
+```bash
+dotnet publish ScimitarBattery/ScimitarBattery.csproj -c Release -f net8.0 -r osx-x64 --self-contained true -o publish/osx-x64
+```
 
 ## Build the portable ZIP (maintainers)
 
@@ -112,4 +136,7 @@ when building. If you obtain the DLL from Corsair’s SDK, put it in `ScimitarBa
 - **Settings:** Device dropdown (from enumerator), poll interval, low/critical thresholds; Save persists to config and restarts polling.
 - **Unplug / device off:** App keeps running; tray shows unknown/missing state without crashing.
 
-## Adding macOS support later
+## macOS adapter TODO
+
+- Improve HID matching (per-device serial/location keys).
+- Add macOS notification support using UserNotifications.
