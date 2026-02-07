@@ -31,13 +31,26 @@ Other Corsair devices may enumerate LEDs differently and are not guaranteed to w
 
 ## Portable release (recommended)
 
-This project distributes a **portable ZIP** for easy GitHub installs:
+This project distributes portable ZIP releases:
 
 1. Download the latest `ScimitarBattery-win-x64.zip` from [Releases](https://github.com/pHarmG/ScimitarBattery/releases).
 2. Extract it to any folder.
 3. Run `ScimitarBattery.exe`.
 
 If Windows shows SmartScreen warning, click **More info** → **Run anyway**.
+
+For macOS:
+
+1. Download `ScimitarBattery-osx-arm64.zip` (Apple Silicon) or `ScimitarBattery-osx-x64.zip` (Intel).
+2. Extract the ZIP (contains a single `ScimitarBattery.app`).
+3. Run:
+   ```bash
+   xattr -dr com.apple.quarantine ScimitarBattery.app
+   open ScimitarBattery.app
+   ```
+4. If blocked, approve once in **System Settings → Privacy & Security → Open Anyway**.
+
+Note: macOS builds are currently unsigned/not notarized with Apple Developer ID.
 
 ### Start with Windows (optional)
 
@@ -113,11 +126,11 @@ Then push a tag like `v1.0.0` and GitHub Actions will attach the ZIP automatical
 - **Keys:**
   - `DeviceKey` – Stable device identifier (e.g. `Corsair:<id>` on Windows). Empty or missing = auto-detect first Scimitar/first mouse.
   - `DeviceDisplayName` – Human-readable name for tooltip.
-  - `PollingIntervalSeconds` – Poll interval (1–3600). Default 30.
+  - `PollingIntervalSeconds` – Poll interval (1–3600). Default 240.
   - `LowThresholdPercent` – Low battery threshold (0–100). Default 30.
   - `CriticalThresholdPercent` – Critical threshold (0–100). Default 15.
 
-First run: if the file does not exist, defaults are poll=30s, low=30%, critical=15%, and the first compatible device is chosen (or auto-detect).
+First run: if the file does not exist, defaults are poll=240s, low=30%, critical=15%, and the first compatible device is chosen.
 
 ## Corsair SDK DLL
 
