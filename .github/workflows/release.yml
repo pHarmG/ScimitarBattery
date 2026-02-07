@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "8.0.123"
 
       - name: Publish portable ZIP
         shell: pwsh
@@ -45,7 +45,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "8.0.123"
 
       - name: Publish macOS (arm64)
         run: dotnet publish ScimitarBattery/ScimitarBattery.csproj -c Release -f net8.0 -r osx-arm64 --self-contained true -o publish/osx-arm64
