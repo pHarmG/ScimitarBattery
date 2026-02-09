@@ -10,6 +10,8 @@ public sealed class AvaloniaTrayIconService : ITrayIconService
 {
     private const int IconBucketStep = 10;
     private readonly TrayIcon _trayIcon;
+    private int? _lastBucket;
+    private WindowIcon? _lastIcon;
 
     public AvaloniaTrayIconService(TrayIcon trayIcon)
     {
@@ -19,7 +21,13 @@ public sealed class AvaloniaTrayIconService : ITrayIconService
     public void UpdateBatteryState(string? deviceName, int? percent)
     {
         int? bucket = percent.HasValue ? (percent.Value / IconBucketStep) * IconBucketStep : null;
-        _trayIcon.Icon = BatteryIconFactory.CreateIcon(bucket);
+        if (_lastIcon == null || _lastBucket != bucket)
+        {
+            _lastIcon = BatteryIconFactory.CreateIcon(bucket);
+            _lastBucket = bucket;
+        }
+
+        _trayIcon.Icon = _lastIcon;
         _trayIcon.ToolTipText = string.IsNullOrEmpty(deviceName)
             ? "Scimitar Battery"
             : percent.HasValue

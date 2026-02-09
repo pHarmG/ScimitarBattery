@@ -78,8 +78,6 @@ public sealed class MacCorsairLightingService : ILightingService, IDisposable
             return;
 
         int bucket = percent.Value / 5;
-        if (_lastBucket == bucket)
-            return;
 
         var color = BatteryColor(percent.Value, _lowThreshold, _criticalThreshold, _colorHigh, _colorMid, _colorLow);
         var resolvedTargetIds = _targetLedIds ?? Array.Empty<int>();

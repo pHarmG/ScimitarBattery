@@ -65,6 +65,12 @@ If you move the folder, re‑toggle the setting so the startup path is updated.
 dotnet run --project ScimitarBattery
 ```
 
+Or use the repo helper that prefers Homebrew `.NET 8` (`dotnet@8`) when present:
+
+```bash
+./scripts/build.sh
+```
+
 A small “Scimitar Battery is running in the system tray” window appears once; close it to keep the app running in the tray only (no main window). Ensure iCUE is running and the SDK is enabled, or the tray tooltip will show "iCUE not available".
 
 If the app exits immediately or nothing appears, check for an error message box. On startup failure, the app also writes `%AppData%\ScimitarBattery\startup-error.txt` with the exception details. If you see platform or rendering errors, try a **self-contained** publish (`--self-contained true`).

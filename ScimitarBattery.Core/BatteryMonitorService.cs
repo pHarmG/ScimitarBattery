@@ -83,15 +83,17 @@ public sealed class BatteryMonitorService
         int? lastBucket = _lastPercent.HasValue ? Bucket(_lastPercent.Value) : null;
         int? currentBucket = percent.HasValue ? Bucket(percent.Value) : null;
         bool bucketChanged = lastBucket != currentBucket;
+        bool percentChanged = _lastPercent != percent;
+        bool stateChanged = severityChanged || bucketChanged || percentChanged;
 
-        if (severityChanged || bucketChanged || _lastPercent != percent)
+        // Re-push tray state every poll to recover from transient tray/device sleep resets,
+        // while keeping notifications/state transitions gated on real data changes.
+        _dispatchToUi(() => _trayIconService.UpdateBatteryState(displayName, percent));
+
+        if (stateChanged)
         {
             _lastPercent = percent;
             _lastSeverity = severity;
-
-            string tooltipDeviceName = displayName;
-            int? tooltipPercent = percent;
-            _dispatchToUi(() => _trayIconService.UpdateBatteryState(tooltipDeviceName, tooltipPercent));
 
             if (percent.HasValue)
             {

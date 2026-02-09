@@ -35,6 +35,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/ScimitarBattery-win-x64.zip
+          generate_release_notes: true
+          body: |
+            Automated release for `${{ github.ref_name }}`.
+            Release assets are attached by this workflow.
 
   build-macos:
     runs-on: macos-latest
@@ -64,3 +68,7 @@ jobs:
           files: |
             artifacts/ScimitarBattery-osx-arm64.zip
             artifacts/ScimitarBattery-osx-x64.zip
+          generate_release_notes: true
+          body: |
+            Automated release for `${{ github.ref_name }}`.
+            Release assets are attached by this workflow.
