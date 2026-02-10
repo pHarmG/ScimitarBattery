@@ -27,6 +27,7 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private NativeMenu? _trayMenu;
     private ILightingService? _lightingService;
+    private readonly DeferredTrayIconService _trayIconService = new();
 
     public override void Initialize()
     {
@@ -101,6 +102,7 @@ public partial class App : Application
         settingsItem.Click += (_, _) => ShowSettingsWindow(desktop);
         exitItem.Click += (_, _) =>
         {
+            _trayIconService.AttachTrayIcon(null);
             _trayIcon?.Dispose();
             if (_lightingService is IDisposable disposableLighting)
                 disposableLighting.Dispose();
@@ -125,6 +127,7 @@ public partial class App : Application
             var trayIcons = new TrayIcons();
             trayIcons.Add(_trayIcon);
             TrayIcon.SetIcons(this, trayIcons);
+            _trayIconService.AttachTrayIcon(_trayIcon);
         });
     }
 
@@ -162,9 +165,6 @@ public partial class App : Application
         _monitorCts?.Cancel();
         _monitorCts = new CancellationTokenSource();
         var token = _monitorCts.Token;
-        ITrayIconService trayService = _trayIcon != null
-            ? new AvaloniaTrayIconService(_trayIcon)
-            : new NullTrayIconService();
         void DispatchToUi(Action a) => Dispatcher.UIThread.Post(a);
         var batteryProvider = PlatformAdapters.CreateBatteryProvider();
         var deviceEnumerator = PlatformAdapters.CreateDeviceEnumerator();
@@ -173,7 +173,7 @@ public partial class App : Application
             disposableLighting.Dispose();
         _lightingService = PlatformAdapters.CreateLightingService(settings);
         ApplyLightingImmediately(settings, deviceEnumerator, batteryProvider, _lightingService);
-        var monitor = new BatteryMonitorService(settings, batteryProvider, deviceEnumerator, trayService, DispatchToUi, _notifier, _lightingService);
+        var monitor = new BatteryMonitorService(settings, batteryProvider, deviceEnumerator, _trayIconService, DispatchToUi, _notifier, _lightingService);
         _ = Task.Run(async () =>
         {
             try
