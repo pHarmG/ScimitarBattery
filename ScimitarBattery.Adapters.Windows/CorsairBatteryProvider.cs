@@ -19,6 +19,10 @@ public sealed class CorsairBatteryProvider : IBatteryProvider
         if (string.IsNullOrEmpty(id))
             return null;
 
+        string? status = null;
+        if (!CorsairSdkBridge.EnsureConnected(ref status))
+            return null;
+
         int err = CorsairNative.CorsairReadDeviceProperty(
             id,
             CorsairNative.CorsairDevicePropertyId.CDPI_BatteryLevel,
@@ -26,7 +30,21 @@ public sealed class CorsairBatteryProvider : IBatteryProvider
             out var prop);
 
         if (err != 0)
-            return null;
+        {
+            // Session can go stale after sleep/wake. Force reconnect and retry once.
+            CorsairSdkBridge.InvalidateConnection();
+            if (!CorsairSdkBridge.EnsureConnected(ref status))
+                return null;
+
+            err = CorsairNative.CorsairReadDeviceProperty(
+                id,
+                CorsairNative.CorsairDevicePropertyId.CDPI_BatteryLevel,
+                0,
+                out prop);
+
+            if (err != 0)
+                return null;
+        }
 
         try
         {

@@ -28,6 +28,7 @@ public partial class App : Application
     private NativeMenu? _trayMenu;
     private ILightingService? _lightingService;
     private readonly DeferredTrayIconService _trayIconService = new();
+    private DateTime _lastTrayClickUtc = DateTime.MinValue;
 
     public override void Initialize()
     {
@@ -124,6 +125,17 @@ public partial class App : Application
                 ToolTipText = "Scimitar Battery",
                 Menu = _trayMenu
             };
+            _trayIcon.Clicked += (_, _) =>
+            {
+                var now = DateTime.UtcNow;
+                if ((now - _lastTrayClickUtc).TotalMilliseconds < 400)
+                {
+                    _lastTrayClickUtc = DateTime.MinValue;
+                    ShowSettingsWindow(desktop);
+                }
+                else
+                    _lastTrayClickUtc = now;
+            };
             var trayIcons = new TrayIcons();
             trayIcons.Add(_trayIcon);
             TrayIcon.SetIcons(this, trayIcons);
@@ -174,14 +186,16 @@ public partial class App : Application
         _lightingService = PlatformAdapters.CreateLightingService(settings);
         ApplyLightingImmediately(settings, deviceEnumerator, batteryProvider, _lightingService);
         var monitor = new BatteryMonitorService(settings, batteryProvider, deviceEnumerator, _trayIconService, DispatchToUi, _notifier, _lightingService);
-        _ = Task.Run(async () =>
+        _ = Task.Run(() =>
         {
             try
             {
-                await Task.Delay(800, token).ConfigureAwait(false);
-                await monitor.RunAsync(token).ConfigureAwait(false);
+                return monitor.RunAsync(token);
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                return Task.CompletedTask;
+            }
         }, token);
     }
 

@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.123"
+          dotnet-version: "8.0.x"
 
       - name: Publish portable ZIP
         shell: pwsh
@@ -35,10 +35,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/ScimitarBattery-win-x64.zip
+          body_path: .github/release-body.md
           generate_release_notes: true
-          body: |
-            Automated release for `${{ github.ref_name }}`.
-            Release assets are attached by this workflow.
 
   build-macos:
     runs-on: macos-latest
@@ -49,7 +47,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.123"
+          dotnet-version: "8.0.x"
 
       - name: Build macOS app bundles
         run: |
@@ -68,7 +66,5 @@ jobs:
           files: |
             artifacts/ScimitarBattery-osx-arm64.zip
             artifacts/ScimitarBattery-osx-x64.zip
+          body_path: .github/release-body.md
           generate_release_notes: true
-          body: |
-            Automated release for `${{ github.ref_name }}`.
-            Release assets are attached by this workflow.

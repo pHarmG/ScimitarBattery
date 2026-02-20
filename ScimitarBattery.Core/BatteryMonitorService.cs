@@ -86,9 +86,10 @@ public sealed class BatteryMonitorService
         bool percentChanged = _lastPercent != percent;
         bool stateChanged = severityChanged || bucketChanged || percentChanged;
 
-        // Re-push tray state every poll to recover from transient tray/device sleep resets,
-        // while keeping notifications/state transitions gated on real data changes.
-        _dispatchToUi(() => _trayIconService.UpdateBatteryState(displayName, percent));
+        // Use last-known percent for tray when current read is null (e.g. device sleep/reconnect)
+        // so we don't flash the unknown (diagonal) icon; re-push every poll to recover from tray resets.
+        int? trayPercent = percent ?? _lastPercent;
+        _dispatchToUi(() => _trayIconService.UpdateBatteryState(displayName, trayPercent));
 
         if (stateChanged)
         {
