@@ -29,22 +29,10 @@ public sealed class CorsairBatteryProvider : IBatteryProvider
             0,
             out var prop);
 
+        // On read failure (e.g. device sleeping) return null without invalidating the session,
+        // so other devices and the next poll can still use the connection.
         if (err != 0)
-        {
-            // Session can go stale after sleep/wake. Force reconnect and retry once.
-            CorsairSdkBridge.InvalidateConnection();
-            if (!CorsairSdkBridge.EnsureConnected(ref status))
-                return null;
-
-            err = CorsairNative.CorsairReadDeviceProperty(
-                id,
-                CorsairNative.CorsairDevicePropertyId.CDPI_BatteryLevel,
-                0,
-                out prop);
-
-            if (err != 0)
-                return null;
-        }
+            return null;
 
         try
         {

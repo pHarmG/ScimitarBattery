@@ -17,6 +17,8 @@ public sealed class BatteryMonitorService
     private int? _lastPercent;
     private BatterySeverity _lastSeverity = BatterySeverity.Unknown;
     private const int IconBucketStep = 10; // Update icon on 10% steps
+    /// <summary>Drop (last - current) larger than this in one poll is treated as likely bogus (e.g. wake-from-sleep glitch).</summary>
+    private const int SuspiciousDropThreshold = 40;
 
     public BatteryMonitorService(
         MonitorSettings settings,
@@ -79,17 +81,31 @@ public sealed class BatteryMonitorService
         // Keep device lighting alive every polling cycle (helps after transient reconnects).
         _lightingService?.UpdateBatteryLighting(deviceKey, percent);
 
+        // After wake-from-sleep the SDK sometimes returns a bogus low value once. Treat a large
+        // single-poll drop as suspicious and keep showing last-known in the tray until next poll.
+        bool suspiciousDrop = percent.HasValue && _lastPercent.HasValue &&
+            (_lastPercent.Value - percent.Value) > SuspiciousDropThreshold;
+
+        int? trayPercent;
+        if (suspiciousDrop)
+            trayPercent = _lastPercent;
+        else
+            trayPercent = percent ?? _lastPercent;
+
+        _dispatchToUi(() => _trayIconService.UpdateBatteryState(displayName, trayPercent));
+
+        if (suspiciousDrop)
+        {
+            // Don't update _lastPercent or _lastSeverity; next poll may return the real value.
+            return Task.CompletedTask;
+        }
+
         bool severityChanged = severity != _lastSeverity;
         int? lastBucket = _lastPercent.HasValue ? Bucket(_lastPercent.Value) : null;
         int? currentBucket = percent.HasValue ? Bucket(percent.Value) : null;
         bool bucketChanged = lastBucket != currentBucket;
         bool percentChanged = _lastPercent != percent;
         bool stateChanged = severityChanged || bucketChanged || percentChanged;
-
-        // Use last-known percent for tray when current read is null (e.g. device sleep/reconnect)
-        // so we don't flash the unknown (diagonal) icon; re-push every poll to recover from tray resets.
-        int? trayPercent = percent ?? _lastPercent;
-        _dispatchToUi(() => _trayIconService.UpdateBatteryState(displayName, trayPercent));
 
         if (stateChanged)
         {
