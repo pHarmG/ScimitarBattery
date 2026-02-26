@@ -283,6 +283,11 @@ public partial class SettingsWindow : Window
         if (!PlatformAdapters.SupportsStartup)
             return;
 
+        // Avoid rewriting startup registration on every Save. On macOS this can
+        // cause launchd to spawn another app instance when the agent is touched.
+        if (PlatformAdapters.IsStartupEnabled() == settings.StartWithWindows)
+            return;
+
         if (!PlatformAdapters.TrySetStartupEnabled(settings.StartWithWindows, out var error))
         {
             StatusText.Text = string.IsNullOrWhiteSpace(error)

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 using System.Xml.Linq;
 
@@ -51,14 +50,9 @@ public static class MacStartupManager
 
                 Directory.CreateDirectory(LaunchAgentsDir);
                 File.WriteAllText(PlistPath, BuildPlist(exePath), new UTF8Encoding(false));
-
-                // Best-effort apply in current session; login behavior works regardless.
-                TryLaunchCtl("unload", PlistPath);
-                TryLaunchCtl("load", PlistPath);
             }
             else
             {
-                TryLaunchCtl("unload", PlistPath);
                 if (File.Exists(PlistPath))
                     File.Delete(PlistPath);
             }
@@ -100,27 +94,6 @@ public static class MacStartupManager
 </dict>
 </plist>
 """;
-    }
-
-    private static void TryLaunchCtl(string verb, string path)
-    {
-        try
-        {
-            using var p = Process.Start(new ProcessStartInfo
-            {
-                FileName = "/bin/launchctl",
-                Arguments = $"{verb} \"{path}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            p?.WaitForExit(1500);
-        }
-        catch
-        {
-            // Ignore launchctl failures; plist is still persisted for next login.
-        }
     }
 
     private static string? ReadStringForKey(XElement dict, string key)

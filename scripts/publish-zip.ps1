@@ -1,6 +1,6 @@
 Param(
     [string]$Runtime = "win-x64",
-    [string]$Framework = "net8.0-windows10.0.19041.0"
+    [string]$Framework = "net10.0-windows10.0.19041.0"
 )
 
 $ErrorActionPreference = "Stop"

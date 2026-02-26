@@ -26,7 +26,7 @@ mkdir -p "$PUBLISH_DIR" "$MACOS_DIR" "$RESOURCES_DIR" "$ARTIFACTS_DIR"
 
 "$DOTNET_BIN" publish "$PROJECT" \
   -c "$CONFIGURATION" \
-  -f net8.0 \
+  -f net10.0 \
   -r "$RID" \
   --self-contained true \
   -o "$PUBLISH_DIR"
